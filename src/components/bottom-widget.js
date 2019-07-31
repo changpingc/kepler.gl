@@ -71,7 +71,9 @@ export default function BottomWidgetFactory(TimeWidget, AnimationControl) {
             width={Math.min(maxWidth, enlargedFilterWidth)}
             layer={animatedLayer}
             playAnimation={visStateActions.playAnimation}
+            resetAnimation={visStateActions.resetAnimation}
             enableLayerAnimation={visStateActions.enableLayerAnimation}
+            updateSpeed={visStateActions.updateSpeed}
             datasets={datasets}
           />
         ) : (

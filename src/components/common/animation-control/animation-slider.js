@@ -1,16 +1,16 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
-import {createSelector} from 'reselect';
 import moment from 'moment';
 
 import Slider from 'components/common/slider/slider';
 import {
   WidgetContainer,
   Button,
-  ButtonGroup
+  ButtonGroup,
+  CenterFlexbox
 } from 'components/common/styled-components';
-import {Play, Reset, Pause} from 'components/common/icons';
-import {getTimeWidgetTitleFormatter} from 'utils/filter-utils';
+import {Play, Reset, Pause, Rocket} from 'components/common/icons';
+import AnimationSpeedToggle from 'components/filters/animation-speed-toggle';
 
 // import getTimeAnimationDomain from 'utils/layer-utils/layer-utils';
 
@@ -40,12 +40,25 @@ const IconButton = styled(Button)`
   }
 `;
 
+const StyledSpeedToggle = styled.div`
+  width: 80px;
+  display: flex;
+  flex-grow: 0;
+  color: ${props => props.theme.textColor};
+  position: relative;
+`;
+
+const StyledSpeedText = styled.div`
+  display: inline-block,
+  width: 27px
+`;
+
 const TimeDisplay = styled.div`
   height: 36px;
   width: 125px;
   background-color: ${props => props.theme.secondaryInputBgd};
   color: white;
-  margin-left: 14px;
+  margin-left: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,10 +103,10 @@ const AnimationControlFactory = () => {
       super(props);
       this.state = {
         isAnimating: false,
-        width: 288
+        width: 288,
+        showSpeedControl: false
       };
       this._animation = null;
-      this._currentStep = 0;
       this._isAnimating = false;
     }
 
@@ -101,20 +114,13 @@ const AnimationControlFactory = () => {
       this.props.enableLayerAnimation(this.props.layer);
     }
 
-    domainSelector = props => props.animation.domain.domain;
-    titleFormatter = createSelector(
-      this.domainSelector,
-      domain => getTimeWidgetTitleFormatter(domain)
-    );
-
     onSlider1Change = val => {
-      const {animation} = this.props;
-      const {domain} = animation;
-      this.props.playAnimation(val + domain[0]);
+      this.props.playAnimation();
     };
 
     _resetAnimation = () => {
-      this._currentStep = -1;
+      const {domain} = this.props.animation;
+      this.props.resetAnimation(domain[0]);
       this._startAnimation();
     };
 
@@ -127,9 +133,12 @@ const AnimationControlFactory = () => {
     };
 
     _nextFrame = () => {
-      const {domain} = this.props.animation;
-      this._currentStep > domain[1] - domain[0] - 1 ? 0 : (this._currentStep += 3);
-      this.onSlider1Change(this._currentStep);
+      const {currentTime, domain, speed} = this.props.animation;
+      if (currentTime < domain[1] - 1) {
+        this.props.playAnimation(speed);
+      } else {
+        this._pauseAnimation();
+      }
     };
 
     _pauseAnimation = () => {
@@ -141,9 +150,18 @@ const AnimationControlFactory = () => {
       this.setState({isAnimating: false});
     };
 
+    _toggleSpeedControl = () => {
+      this.setState({showSpeedControl: !this.state.showSpeedControl});
+    };
+
+    _updateSpeed = speed => {
+      this.props.updateSpeed(speed);
+    };
+
     render() {
       const {animation, width} = this.props;
-      const {currentTime, domain} = animation;
+      const {currentTime, domain, speed} = animation;
+      const {showSpeedControl} = this.state;
 
       return (
         <WidgetContainer width={width}>
@@ -162,10 +180,32 @@ const AnimationControlFactory = () => {
                 minValue={domain[0]}
                 maxValue={domain[1]}
                 value1={currentTime}
+                enableBarDrag={true}
                 onSlider1Change={this.onSlider1Change}
                 enableBarDrag={true}
               />
             </SliderWrapper>
+
+            <StyledSpeedToggle>
+              <Button link width="80px" onClick={this._toggleSpeedControl}>
+                <CenterFlexbox className="bottom-widget__icon speed">
+                  <Rocket height="15px" />
+                </CenterFlexbox>
+                <StyledSpeedText
+                  style={{visibility: !showSpeedControl ? 'visible' : 'hidden'}}
+                >
+                  {speed}x
+                </StyledSpeedText>
+              </Button>
+              {showSpeedControl ? (
+                <AnimationSpeedToggle
+                  className="bottom-widget__toggle"
+                  onHide={this._toggleSpeedControl}
+                  updateAnimationSpeed={this._updateSpeed}
+                  speed={speed}
+                />
+              ) : null}
+            </StyledSpeedToggle>
             <TimeDisplay>
               {isUnixTs ? (
                 <span>{moment(currentTime, 'X').format(defaultTimeFormat)}</span>

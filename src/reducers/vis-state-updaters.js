@@ -161,7 +161,7 @@ export const INITIAL_VIS_STATE = {
     //   }
     // ]
   ],
-
+  //
   // defaults layer classes
   layerClasses: LayerClasses,
 
@@ -169,11 +169,9 @@ export const INITIAL_VIS_STATE = {
   animationConfig: {
     domain: [0, 2000],
     currentTime: 0,
-    duration: 10
+    duration: 10,
+    speed: 1
   }
-  // layers: {
-  //   [layer.id]: {enabled: true, speed: 1000, currentTime: null}
-  // }
 };
 
 function updateStateWithLayerAndData(state, {layerData, layer, idx}) {
@@ -634,17 +632,36 @@ export const updateAnimationSpeedUpdater = (state, action) => ({
 });
 
 /**
- * Update animation current time
+ * Update animation config current time
  * @memberof visStateUpdaters
  * @param {Object} state `visState`
  * @param {Object} action action
- * @param {Number} action.value current time value of action
+ * @param {Number} action.speed current speed of animation
  * @returns {Object} nextState
  * @public
  *
  */
 
-export const playAnimationUpdater = (state, {value}) => ({
+export const playAnimationUpdater = (state, {speed}) => ({
+  ...state,
+  animationConfig: {
+    ...state.animationConfig,
+    currentTime: state.animationConfig.currentTime + speed
+  }
+});
+
+/**
+ * Reset animation config current time to a specified value
+ * @memberof visStateUpdaters
+ * @param {Object} state `visState`
+ * @param {Object} action action
+ * @param {Number} action.value the value current time will be set to
+ * @returns {Object} nextState
+ * @public
+ *
+ */
+
+export const resetAnimationUpdater = (state, {value}) => ({
   ...state,
   animationConfig: {
     ...state.animationConfig,
@@ -653,10 +670,11 @@ export const playAnimationUpdater = (state, {value}) => ({
 });
 
 /**
- * Enable animation domain with the min and max of timestamps from geojson
+ * Enable animation domain with the time domain
  * @memberof visStateUpdaters
  * @param {Object} state `visState`
  * @param {Object} action action
+ *  @param {Object} action.oldLayer the layer object to be updated
  * @returns {Object} nextState
  * @public
  *
@@ -671,6 +689,27 @@ export const enableLayerAnimationUpdater = (state, action) => {
       ...state.animationConfig,
       currentTime: minTs,
       domain: [minTs, maxTs]
+    }
+  };
+};
+
+/**
+ * Update animation speed with the vertical speed slider
+ * @memberof visStateUpdaters
+ * @param {Object} state `visState`
+ * @param {Object} action action
+ * @param {Number} action.value the speed of the animation
+ * @returns {Object} nextState
+ * @public
+ *
+ */
+
+export const updateSpeedUpdater = (state, {value}) => {
+  return {
+    ...state,
+    animationConfig: {
+      ...state.animationConfig,
+      speed: value
     }
   };
 };
