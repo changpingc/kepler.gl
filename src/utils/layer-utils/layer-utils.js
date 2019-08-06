@@ -105,7 +105,7 @@ export function getTimeAnimationDomainFoTripLayer(layer, datasets) {
   const dataContent = datasets[dataId].allData;
   const geojsonFieldIdx = columns.geojson.fieldIdx;
 
-  // TODO: H factor in more input format beyond 3rd coord as ts
+  // TODO: factor in more input format beyond 3rd coord as ts
   const timeField = dataContent
     .map(d => d[geojsonFieldIdx].geometry.coordinates.map(coord => coord[3]))
     .flat();
@@ -114,6 +114,18 @@ export function getTimeAnimationDomainFoTripLayer(layer, datasets) {
 }
 
 export function getTimeAnimationDomain(layer, datasets) {
-  // TODO: H factor in multiple layers
-  return getTimeAnimationDomainFoTripLayer(layer, datasets);
+  if (layer.length == 1) {
+    return getTimeAnimationDomainFoTripLayer(layer[0], datasets);
+  } else {
+    const minRange = [];
+    const maxRange = [];
+
+    layer.map(layer => {
+      const layerTimeRange = getTimeAnimationDomainForTripLayer(layer, datasets);
+      minRange.push(layerTimeRange[0]);
+      maxRange.push(layerTimeRange[1]);
+    });
+
+    return [extent(minRange)[0], extent(maxRange)[0]];
+  }
 }

@@ -28,6 +28,8 @@ import {
 } from 'constants/default-settings';
 import {createNotification} from 'utils/notifications-utils';
 
+import getTimeAnimationDomain from 'utils/layer-utils/layer-utils';
+
 export const DEFAULT_ACTIVE_SIDE_PANEL = 'layer';
 export const DEFAULT_MODAL = ADD_DATA_ID;
 
@@ -68,7 +70,7 @@ export const DEFAULT_MODAL = ADD_DATA_ID;
  * export default composedReducer;
  */
 /* eslint-disable no-unused-vars */
- const uiStateUpdaters = null;
+const uiStateUpdaters = null;
 /* eslint-enable no-unused-vars */
 
 /**
@@ -264,7 +266,7 @@ export const showExportDropdownUpdater = (state, {payload: id}) => ({
  * @returns {Object} nextState
  * @public
  */
-export const hideExportDropdownUpdater = (state) => ({
+export const hideExportDropdownUpdater = state => ({
   ...state,
   visibleDropdown: null
 });
@@ -298,10 +300,7 @@ export const toggleMapControlUpdater = (state, {payload: panelId}) => ({
  * @returns {Object} nextState
  * @public
  */
-export const openDeleteModalUpdater = (
-  state,
-  {payload: datasetKeyToRemove}
-) => ({
+export const openDeleteModalUpdater = (state, {payload: datasetKeyToRemove}) => ({
   ...state,
   currentModal: DELETE_DATA_ID,
   datasetKeyToRemove
@@ -493,7 +492,10 @@ export const setExportDataUpdater = state => ({
  * @returns {Object} nextState
  * @public
  */
-export const setUserMapboxAccessTokenUpdater = (state, {payload: userMapboxToken}) => ({
+export const setUserMapboxAccessTokenUpdater = (
+  state,
+  {payload: userMapboxToken}
+) => ({
   ...state,
   exportMap: {
     ...state.exportMap,
@@ -513,20 +515,17 @@ export const setExportMapFormat = (state, {payload: format}) => ({
 });
 
 /**
-* Add a notification to be displayed
-* @memberof uiStateUpdaters
-* @param {Object} state `uiState`
-* @param {Object} action
-* @param {Object} action.payload
-* @returns {Object} nextState
-* @public
-*/
+ * Add a notification to be displayed
+ * @memberof uiStateUpdaters
+ * @param {Object} state `uiState`
+ * @param {Object} action
+ * @param {Object} action.payload
+ * @returns {Object} nextState
+ * @public
+ */
 export const addNotificationUpdater = (state, {payload}) => ({
   ...state,
-  notifications: [
-    ...(state.notifications || []),
-    createNotification(payload)
-  ]
+  notifications: [...(state.notifications || []), createNotification(payload)]
 });
 
 /**

@@ -12,8 +12,6 @@ import {
 import {Play, Reset, Pause, Rocket} from 'components/common/icons';
 import AnimationSpeedToggle from 'components/filters/animation-speed-toggle';
 
-// import getTimeAnimationDomain from 'utils/layer-utils/layer-utils';
-
 const SliderWrapper = styled.div`
   display: flex;
   position: relative;
@@ -115,7 +113,10 @@ const AnimationControlFactory = () => {
     }
 
     onSlider1Change = val => {
-      this.props.playAnimation();
+      const {domain} = this.props.animation;
+      if (val >= domain[0]) {
+        this.props.resetAnimation(val);
+      }
     };
 
     _resetAnimation = () => {

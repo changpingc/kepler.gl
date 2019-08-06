@@ -57,10 +57,9 @@ export default function BottomWidgetFactory(TimeWidget, AnimationControl) {
 
     const enlargedFilterWidth = isOpen ? containerW - sidePanelWidth : containerW;
 
-    // TODO: H factor in multi-layers. Handle 1 layer for now
     const animatedLayer = layers.filter(
       l => l.config.animation.enabled && l.config.isVisible
-    )[0];
+    );
 
     // show playback control if layers contain trip layer & at least one trip layer is visible
     return (

@@ -670,7 +670,8 @@ export const resetAnimationUpdater = (state, {value}) => ({
 });
 
 /**
- * Enable animation domain with the time domain
+ * Set animation domain with the min and max of timestamps from geojson
+ * Enable multi-layer domain range
  * @memberof visStateUpdaters
  * @param {Object} state `visState`
  * @param {Object} action action
