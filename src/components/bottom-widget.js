@@ -64,7 +64,7 @@ export default function BottomWidgetFactory(TimeWidget, AnimationControl) {
     // show playback control if layers contain trip layer & at least one trip layer is visible
     return (
       <WidgetContainer>
-        {animatedLayer ? (
+        {animatedLayer.length >= 1 ? (
           <AnimationControl
             animation={animationConfig}
             width={Math.min(maxWidth, enlargedFilterWidth)}

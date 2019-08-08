@@ -28,8 +28,6 @@ import {
 } from 'constants/default-settings';
 import {createNotification} from 'utils/notifications-utils';
 
-import getTimeAnimationDomain from 'utils/layer-utils/layer-utils';
-
 export const DEFAULT_ACTIVE_SIDE_PANEL = 'layer';
 export const DEFAULT_MODAL = ADD_DATA_ID;
 

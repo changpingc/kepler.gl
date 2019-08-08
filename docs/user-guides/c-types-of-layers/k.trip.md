@@ -8,7 +8,7 @@ Trip layer can display animated path.
 **Data format**
 Currently trip layer support a special geoJSON format where the coordinate linestring has a 4th element denoting timestamp.
 
-In order to animate the path, the geometry needs to contain `LineString` feature type and the coordinates need to have 4 elements with the first two being longitude and latitude, the third being altitude and the fourth being timestamp.
+In order to animate the path, the geometry needs to contain `LineString` feature type and the coordinates need to have 4 elements `[longitude, latitude, altitude, timestamp]`.
 
 ```
 {
@@ -18,9 +18,9 @@ In order to animate the path, the geometry needs to contain `LineString` feature
       geometry: {
         type: 'LineString',
         coordinates: [
-          [-74.20986, 40.81773, (altitude=0), 1564184363],
-          [-74.20987, 40.81765, (altitude=0), 1564184396],
-          [-74.20998, 40.81746, (altitude=0), 1564184409]
+          [-74.20986, 40.81773, 0, 1564184363],
+          [-74.20987, 40.81765, 0, 1564184396],
+          [-74.20998, 40.81746, 0, 1564184409]
         ]
       }
     }

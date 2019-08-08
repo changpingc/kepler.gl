@@ -43,7 +43,7 @@ import {createNewDataEntry} from 'utils/dataset-utils';
 import {
   findDefaultLayer,
   calculateLayerData,
-  getTimeAnimationDomain
+  getTimeAnimationDomainForTripLayer
 } from 'utils/layer-utils/layer-utils';
 
 import {
@@ -56,6 +56,8 @@ import {
 import {Layer, LayerClasses} from 'layers';
 import {processFileToLoad} from '/utils/file-utils';
 import {DEFAULT_TEXT_LABEL} from 'layers/layer-factory';
+
+import {extent} from 'd3-array';
 
 // react-palm
 // disable capture exception for react-palm call to withTask
@@ -167,7 +169,7 @@ export const INITIAL_VIS_STATE = {
 
   // default animation
   animationConfig: {
-    domain: [0, 2000],
+    domain: [null, null],
     currentTime: 0,
     duration: 10,
     speed: 1
@@ -669,6 +671,38 @@ export const resetAnimationUpdater = (state, {value}) => ({
   }
 });
 
+function updateAnimationDomain(state) {
+  // merge all animatable layer domain calculate the union
+  // state.layers.config.animation.domain
+  // take state.layer
+  const animatableLayers = state.layers.filter(l => l.config.animation.enabled);
+  // const domains = state.layers.map(l => l.config.animation.domain);
+
+  const minRange = [];
+  const maxRange = [];
+
+  animatableLayers.map(layer => {
+    const layerTimeRange = layer.config.animation.domain;
+
+    minRange.push(layerTimeRange[0]);
+    maxRange.push(layerTimeRange[1]);
+  });
+
+  const minTs = extent(minRange)[0];
+  const maxTs = extent(maxRange)[1];
+
+  return {
+    ...state,
+    animationConfig: {
+      ...state.animationConfig,
+      // of currentTime is in newDomain, don't change it
+      // if currentTime is not in newDomain, set it to min
+      currentTime: minTs, // Math.min(currentMin, minTs),
+      domain: [minTs, maxTs] // [Math.min(currentMin, minTs), Math.max(currentMax, maxTs)]
+    }
+  };
+}
+
 /**
  * Set animation domain with the min and max of timestamps from geojson
  * Enable multi-layer domain range
@@ -681,17 +715,24 @@ export const resetAnimationUpdater = (state, {value}) => ({
  *
  */
 
-export const enableLayerAnimationUpdater = (state, action) => {
-  const {oldLayer} = action;
-  const [minTs, maxTs] = getTimeAnimationDomain(oldLayer, state.datasets);
-  return {
-    ...state,
-    animationConfig: {
-      ...state.animationConfig,
-      currentTime: minTs,
+export const enableLayerAnimationUpdater = (state, oldLayer) => {
+  // calculate animation domain for the layer enabled
+  // layer.config.animation.domain
+  // update newLayer into the state.layers
+  // merge all animatable layer domain calculate the union
+  const [minTs, maxTs] = getTimeAnimationDomainForTripLayer(
+    oldLayer[0],
+    state.datasets
+  );
+
+  oldLayer[0].updateLayerConfig({
+    animation: {
+      ...oldLayer[0].config.animation,
       domain: [minTs, maxTs]
     }
-  };
+  });
+
+  return updateAnimationDomain(state);
 };
 
 /**
@@ -810,7 +851,7 @@ export const removeLayerUpdater = (state, {idx}) => {
   const layerToRemove = state.layers[idx];
   const newMaps = removeLayerFromSplitMaps(state.splitMaps, layerToRemove);
 
-  return {
+  const newState = {
     ...state,
     layers: [...layers.slice(0, idx), ...layers.slice(idx + 1, layers.length)],
     layerData: [
@@ -824,6 +865,8 @@ export const removeLayerUpdater = (state, {idx}) => {
     hoverInfo: layerToRemove.isLayerHovered(hoverInfo) ? undefined : hoverInfo,
     splitMaps: newMaps
   };
+
+  return updateAnimationDomain(newState);
 };
 
 /**
@@ -1163,10 +1206,34 @@ export const updateVisDataUpdater = (state, action) => {
     mergedState = addDefaultLayers(mergedState, newDateEntries);
   }
 
+  const newLayers = mergedState.layers.filter(
+    l => l.config.dataId in newDateEntries
+  );
+
+  // enableLayerAnimation
+  // if (newLayers[0].config.animation.enabled) {
+  //   const [minTs, maxTs] = getTimeAnimationDomainForTripLayer(
+  //     newLayers[0],
+  //     mergedState.datasets
+  //   );
+
+  //   newLayers[0].updateLayerConfig({
+  //     animation: {
+  //       ...newLayers[0].config.animation,
+  //       domain: [minTs, maxTs]
+  //     }
+  //   });
+
+  //   updateAnimationDomain(mergedState);
+  // }
+
+  newLayers.forEach(l => {
+    if (l.config.animation.enabled) {
+      mergedState = enableLayerAnimationUpdater(mergedState, [l]);
+    }
+  });
+
   if (mergedState.splitMaps.length) {
-    const newLayers = mergedState.layers.filter(
-      l => l.config.dataId in newDateEntries
-    );
     // if map is split, add new layers to splitMaps
     mergedState = {
       ...mergedState,
@@ -1448,9 +1515,13 @@ export function updateAllLayerDomainData(state, dataId, newFilter) {
     }
   });
 
-  return {
+  const newState = {
     ...state,
     layers: newLayers,
     layerData: newLayerDatas
   };
+
+  // return newState;
+  // TODO: H
+  return updateAnimationDomain(newState);
 }

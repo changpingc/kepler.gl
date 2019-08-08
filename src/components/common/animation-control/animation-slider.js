@@ -108,10 +108,6 @@ const AnimationControlFactory = () => {
       this._isAnimating = false;
     }
 
-    componentDidMount() {
-      this.props.enableLayerAnimation(this.props.layer);
-    }
-
     onSlider1Change = val => {
       const {domain} = this.props.animation;
       if (val >= domain[0]) {
@@ -135,7 +131,7 @@ const AnimationControlFactory = () => {
 
     _nextFrame = () => {
       const {currentTime, domain, speed} = this.props.animation;
-      if (currentTime < domain[1] - 1) {
+      if (currentTime <= domain[1] - speed) {
         this.props.playAnimation(speed);
       } else {
         this._pauseAnimation();
@@ -181,7 +177,6 @@ const AnimationControlFactory = () => {
                 minValue={domain[0]}
                 maxValue={domain[1]}
                 value1={currentTime}
-                enableBarDrag={true}
                 onSlider1Change={this.onSlider1Change}
                 enableBarDrag={true}
               />

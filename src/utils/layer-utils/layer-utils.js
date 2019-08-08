@@ -100,7 +100,7 @@ export function getLightSettingsFromBounds(bounds) {
     : DEFAULT_LIGHT_SETTINGS;
 }
 
-export function getTimeAnimationDomainFoTripLayer(layer, datasets) {
+export function getTimeAnimationDomainForTripLayer(layer, datasets) {
   const {columns, dataId} = layer.config;
   const dataContent = datasets[dataId].allData;
   const geojsonFieldIdx = columns.geojson.fieldIdx;
@@ -113,19 +113,18 @@ export function getTimeAnimationDomainFoTripLayer(layer, datasets) {
   return extent(timeField);
 }
 
-export function getTimeAnimationDomain(layer, datasets) {
-  if (layer.length == 1) {
-    return getTimeAnimationDomainFoTripLayer(layer[0], datasets);
-  } else {
-    const minRange = [];
-    const maxRange = [];
-
-    layer.map(layer => {
-      const layerTimeRange = getTimeAnimationDomainForTripLayer(layer, datasets);
-      minRange.push(layerTimeRange[0]);
-      maxRange.push(layerTimeRange[1]);
-    });
-
-    return [extent(minRange)[0], extent(maxRange)[0]];
+export function getTimeAnimationDomain(layers, datasets) {
+  if (layers.length === 1) {
+    return getTimeAnimationDomainForTripLayer(layers[0], datasets);
   }
+  const minRange = [];
+  const maxRange = [];
+
+  layers.map(layer => {
+    const layerTimeRange = getTimeAnimationDomainForTripLayer(layer, datasets);
+    minRange.push(layerTimeRange[0]);
+    maxRange.push(layerTimeRange[1]);
+  });
+
+  return [extent(minRange)[0], extent(maxRange)[0]];
 }

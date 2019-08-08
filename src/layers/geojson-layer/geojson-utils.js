@@ -21,8 +21,9 @@
 import geojsonExtent from '@mapbox/geojson-extent';
 import wktParser from 'wellknown';
 import normalize from '@mapbox/geojson-normalize';
-
+import {Analyzer} from 'type-analyzer';
 import {getSampleData} from 'utils/data-utils';
+import moment from 'moment';
 
 /**
  * Parse raw data to geojson feature
@@ -184,4 +185,81 @@ export function getGeojsonFeatureTypes(allFeatures) {
     return accu;
   }, {});
   return featureTypes;
+}
+
+/**
+ * Parse geojson from string
+ * @param {array} geojson feature object values
+ * @returns {boolean} whether the geometry coordinates has length of 4
+ */
+export function coordHasLength4(samples) {
+  let hasLength4 = true;
+  for (let i = 0; i < samples.length; i += 1) {
+    hasLength4 = !samples[i].geometry.coordinates.find(c => c.length < 4);
+    if (samples[i].geometry.coordinates.find(c => c.length < 4)) {
+      break;
+    }
+  }
+  return hasLength4;
+}
+
+/**
+ * Check whether geojson linestring's 4th coordinate is 1) not timestamp 2) unix time stamp 3) real date time
+ * @param {array} data array to be tested if its elements are timestamp
+ * @returns {string} the type of timestamp: unix/datetime/invalid(not timestamp)
+ */
+
+export function containValidTime(data) {
+  const formattedData = [{...data}];
+  const analyzedType = Analyzer.computeColMeta(formattedData);
+  if (analyzedType.find(d => d.category !== 'TIME')) {
+    return false;
+  } else if (['x', 'X'].includes(analyzedType[0].format)) {
+    return 'unix';
+  }
+  return 'dateTime';
+}
+
+/**
+ * Check if geojson features are trip layer animatable by meeting 3 conditions
+ * @param {array} features array of geojson feature objects
+ * @returns {boolean} whether it is trip layer animatable
+ */
+export function isTripAnimatable(features) {
+  let isAnimatable = false;
+  const featureTypes = getGeojsonFeatureTypes(features);
+  //condition 1: contain line string
+  const hasLineString = Boolean(featureTypes.line);
+  if (!hasLineString) {
+    return isAnimatable;
+  }
+  //condition 2:sample line strings contain 4 coordinates
+  const sampleFeatures =
+    features.length > 500 ? getSampleData(features, 500) : features;
+  const HasLength4 = coordHasLength4(sampleFeatures);
+  if (!HasLength4) {
+    return isAnimatable;
+  }
+  //condition 3:the 4 coordinate of the first feature line strings is valid time
+  const tsHolder = sampleFeatures[0].geometry.coordinates.map(coord => coord[3]);
+  const hasValidTime = containValidTime(tsHolder);
+  if (hasValidTime) {
+    isAnimatable = true;
+  }
+  return isAnimatable;
+}
+
+/**
+ * Get unix timestamp from animatable geojson for deck.gl trip layer
+ * @param {array} features array of geojson feature objects
+ * @returns {} unix timestamp
+ */
+export function dataToTimeStamp(features) {
+  const unixTime =
+    containValidTime(features[0].geometry.coordinates[0]) === 'dateTime'
+      ? features.map(f =>
+          f.geometry.coordinates.map(coord => moment.utc(coord[3]).valueOf())
+        )
+      : features.map(f => f.geometry.coordinates.map(coord => coord[3]));
+  return unixTime;
 }
