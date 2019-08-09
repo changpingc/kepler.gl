@@ -30,7 +30,8 @@ import {
   getGeojsonDataMaps,
   getGeojsonBounds,
   getGeojsonFeatureTypes,
-  isTripAnimatable
+  isTripAnimatable,
+  dataToTimeStamp
 } from '../geojson-layer/geojson-utils';
 import {hexToRgb} from 'utils/color-utils';
 
@@ -145,6 +146,7 @@ export default class TripLayer extends Layer {
   /* eslint-disable complexity */
   formatLayerData(_, allData, filteredIndex, oldLayerData, opt = {}) {
     // to-do: parse segment from allData
+    console.log('formatLayerData');
     const {
       colorScale,
       colorField,
@@ -159,7 +161,7 @@ export default class TripLayer extends Layer {
     const {stroked, colorRange, sizeRange} = visConfig;
 
     const getFeature = this.getPositionAccessor(this.config.column);
-    // TODO: H
+
     // geojson feature are object, if doesn't exists
     // create it and save to layer
     if (!oldLayerData || oldLayerData.getFeature !== getFeature) {
@@ -200,8 +202,7 @@ export default class TripLayer extends Layer {
     return {
       data: geojsonData,
       getPath: d => d.geometry.coordinates.map(coord => coord.slice(0, 2)),
-      // TODO: H  this.dataToTimestamp
-      // getTimestamps: d => this.dataToTimestamp[d.properties.index]
+      getTimestamps: d => this.dataToTimeStamp[d.properties.index],
       getColor: d =>
         cScale
           ? this.getEncodedChannelValue(
@@ -224,14 +225,15 @@ export default class TripLayer extends Layer {
   /* eslint-enable complexity */
 
   updateLayerMeta(allData) {
+    console.log('updateLayerMeta');
     const getFeature = this.getPositionAccessor();
     this.dataToFeature = getGeojsonDataMaps(allData, getFeature);
 
     // calculate layer meta
     const allFeatures = Object.values(this.dataToFeature);
-    // TODO: H calculate dataToTimesStamp as in dataToFeature
-    // this.dataToTimeStamp = dataToTimeStamp(allFeatures);
-    // console.log('this.dataToTimeStamp', this.dataToTimeStamp);
+
+    this.dataToTimeStamp = dataToTimeStamp(allFeatures);
+
     // get bounds from features
     const bounds = getGeojsonBounds(allFeatures);
     // get lightSettings from points
@@ -240,15 +242,11 @@ export default class TripLayer extends Layer {
     // keep a record of what type of geometry the collection has
     const featureTypes = getGeojsonFeatureTypes(allFeatures);
 
-    // TODO: H WIP
-    // const
-
     this.updateMeta({bounds, lightSettings, featureTypes});
   }
 
   setInitialLayerConfig(allData) {
     this.updateLayerMeta(allData);
-    // calculate config.animation.domain;
     return this;
   }
 
@@ -287,9 +285,9 @@ export default class TripLayer extends Layer {
         idx,
         data: data.data,
         getPath: d => d.geometry.coordinates.map(coord => coord.slice(0, 2)),
-        // TODO: H d => this.dataToTimestamp[d.properties.index]
-        getTimestamps: d =>
-          d.geometry.coordinates.map(coord => (coord.length === 4 ? coord[3] : 0)),
+        getTimestamps: data.getTimestamps,
+        // getTimestamps: d =>
+        //   d.geometry.coordinates.map(coord => (coord.length === 4 ? coord[3] : 0)),
         getColor: data.getColor,
         opacity: 0.3,
         getWidth: d => d.properties.vol,

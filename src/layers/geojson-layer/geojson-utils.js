@@ -258,8 +258,12 @@ export function dataToTimeStamp(features) {
   const unixTime =
     containValidTime(features[0].geometry.coordinates[0]) === 'dateTime'
       ? features.map(f =>
-          f.geometry.coordinates.map(coord => moment.utc(coord[3]).valueOf())
+          f.geometry.coordinates.map(coord =>
+            coord.length === 4 ? moment.utc(coord[3]).valueOf() : 0
+          )
         )
-      : features.map(f => f.geometry.coordinates.map(coord => coord[3]));
+      : features.map(f =>
+          f.geometry.coordinates.map(coord => (coord.length === 4 ? coord[3] : 0))
+        );
   return unixTime;
 }
