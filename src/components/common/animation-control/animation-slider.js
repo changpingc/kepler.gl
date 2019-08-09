@@ -68,9 +68,7 @@ const TimeDisplay = styled.div`
   }
 `;
 
-const defaultTimeFormat = 'MM/DD/YY hh:mma';
-
-const isUnixTs = false;
+const defaultTimeFormat = 'MM/DD/YY hh:mm:ss';
 
 const buttonHeight = '16px';
 const AnimationControls = ({
@@ -159,7 +157,7 @@ const AnimationControlFactory = () => {
       const {animation, width} = this.props;
       const {currentTime, domain, speed} = animation;
       const {showSpeedControl} = this.state;
-
+      console.log('currentTime', currentTime);
       return (
         <WidgetContainer width={width}>
           <AnimationWidgetInner className="animation-widget--inner">
@@ -202,14 +200,18 @@ const AnimationControlFactory = () => {
                 />
               ) : null}
             </StyledSpeedToggle>
-            <TimeDisplay>
-              {isUnixTs ? (
-                <span>{moment(currentTime, 'X').format(defaultTimeFormat)}</span>
-              ) : (
-                <span>{moment.utc(currentTime).format(defaultTimeFormat)}</span>
-              )}
-            </TimeDisplay>
           </AnimationWidgetInner>
+
+          <TimeDisplay
+            style={{
+              position: 'absolute',
+              fill: 'red',
+              bottom: '90px',
+              right: '90px'
+            }}
+          >
+            <span>{moment.unix(currentTime).format(defaultTimeFormat)}</span>
+          </TimeDisplay>
         </WidgetContainer>
       );
     }
