@@ -34,6 +34,7 @@ import {
   dataToTimeStamp
 } from '../geojson-layer/geojson-utils';
 import {hexToRgb} from 'utils/color-utils';
+import TripInfoModalFactory from './trip-info-modal';
 
 export const tripVisConfigs = {
   opacity: 'opacity',
@@ -67,6 +68,7 @@ export default class TripLayer extends Layer {
     this.dataToFeature = {};
     this.registerVisConfig(tripVisConfigs);
     this.getFeature = memoize(featureAccessor, featureResolver);
+    this._layerInfoModal = TripInfoModalFactory();
   }
 
   get type() {
@@ -101,6 +103,15 @@ export default class TripLayer extends Layer {
     return this.getFeature(this.config.columns);
   }
 
+  get layerInfoModal() {
+    return {
+      id: 'iconInfo',
+      template: this._layerInfoModal,
+      modalProps: {
+        title: 'How to enable trip animation'
+      }
+    };
+  }
   static findDefaultLayerProps({label, fields, data}, foundLayers) {
     const geojsonColumns = fields.filter(f => f.type === 'geojson').map(f => f.name);
 
@@ -146,7 +157,6 @@ export default class TripLayer extends Layer {
   /* eslint-disable complexity */
   formatLayerData(_, allData, filteredIndex, oldLayerData, opt = {}) {
     // to-do: parse segment from allData
-    console.log('formatLayerData');
     const {
       colorScale,
       colorField,
@@ -225,7 +235,6 @@ export default class TripLayer extends Layer {
   /* eslint-enable complexity */
 
   updateLayerMeta(allData) {
-    console.log('updateLayerMeta');
     const getFeature = this.getPositionAccessor();
     this.dataToFeature = getGeojsonDataMaps(allData, getFeature);
 
@@ -286,8 +295,6 @@ export default class TripLayer extends Layer {
         data: data.data,
         getPath: d => d.geometry.coordinates.map(coord => coord.slice(0, 2)),
         getTimestamps: data.getTimestamps,
-        // getTimestamps: d =>
-        //   d.geometry.coordinates.map(coord => (coord.length === 4 ? coord[3] : 0)),
         getColor: data.getColor,
         opacity: 0.3,
         getWidth: d => d.properties.vol,

@@ -228,19 +228,19 @@ export function containValidTime(data) {
 export function isTripAnimatable(features) {
   let isAnimatable = false;
   const featureTypes = getGeojsonFeatureTypes(features);
-  //condition 1: contain line string
+  // condition 1: contain line string
   const hasLineString = Boolean(featureTypes.line);
   if (!hasLineString) {
     return isAnimatable;
   }
-  //condition 2:sample line strings contain 4 coordinates
+  // condition 2:sample line strings contain 4 coordinates
   const sampleFeatures =
     features.length > 500 ? getSampleData(features, 500) : features;
   const HasLength4 = coordHasLength4(sampleFeatures);
   if (!HasLength4) {
     return isAnimatable;
   }
-  //condition 3:the 4 coordinate of the first feature line strings is valid time
+  // condition 3:the 4 coordinate of the first feature line strings is valid time
   const tsHolder = sampleFeatures[0].geometry.coordinates.map(coord => coord[3]);
   const hasValidTime = containValidTime(tsHolder);
   if (hasValidTime) {
